@@ -1,50 +1,32 @@
 pipeline {
     agent any
-    tools {
-        gradle 'gradel'  // Jenkins에 등록한 Gradle 도구 이름
-    }
     environment {
-        AWS_REGION = 'ap-northeast-2'
-        ECR_REPO = '341162387145.dkr.ecr.ap-northeast-2.amazonaws.com/nsa'
-        IMAGE_TAG = 'latest'
+        ECR_REGISTRY = "341162387145.dkr.ecr.ap-northeast-2.amazonaws.com"
+        APP_REPO_NAME = "nsa"
+        AWS_REGION = "ap-northeast-2"
     }
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        stage('Build with Gradle') {
-            steps {
-                sh 'gradle build -x test'
-            }
-        }
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${ECR_REPO}:${IMAGE_TAG}")
-                }
+                sh 'docker build --force-rm -t "$ECR_REGISTRY/$APP_REPO_NAME:latest" .'
+                sh 'docker image ls'
             }
         }
-        stage('Push to ECR') {
+        stage('Push Image to ECR Repo') {
             steps {
-                script {
-                    sh '''
+                sh '''
                     aws ecr get-login-password --region $AWS_REGION \
-                    | docker login --username AWS --password-stdin $ECR_REPO
-                    docker push $ECR_REPO:$IMAGE_TAG
-                    '''
-                }
+                    | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+                    docker push $ECR_REGISTRY/$APP_REPO_NAME:latest
+                '''
             }
         }
     }
     post {
-        success {
-            echo '✅ ECR 푸시 완료!'
-        }
-        failure {
-            echo '❌ 실패함. 로그 확인.'
+        always {
+            echo '🧹 Deleting all local Docker images...'
+            sh 'docker image prune -af'
         }
     }
 }
-
