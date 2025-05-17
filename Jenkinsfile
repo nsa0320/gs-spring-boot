@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    tools {
+        gradle 'gradel'  // Jenkins에 등록한 Gradle 도구 이름
+    }
     environment {
         AWS_REGION = 'ap-northeast-2'
         ECR_REPO = '341162387145.dkr.ecr.ap-northeast-2.amazonaws.com/nsa'
@@ -13,7 +16,7 @@ pipeline {
         }
         stage('Build with Gradle') {
             steps {
-                sh './gradlew build -x test'
+                sh 'gradle build -x test'
             }
         }
         stage('Build Docker Image') {
@@ -37,10 +40,11 @@ pipeline {
     }
     post {
         success {
-            echo '✅ ECR 푸시 성공!'
+            echo '✅ ECR 푸시 완료!'
         }
         failure {
             echo '❌ 실패함. 로그 확인.'
         }
     }
 }
+
