@@ -136,7 +136,7 @@ You should see output similar to the following:
 ====
 [source,text]
 ----
-Let's inspect the beans provided by Spring Boot:
+Let's inspect the beans provided by Spring Boot
 application
 beanNameHandlerMapping
 defaultServletHandlerMapping
